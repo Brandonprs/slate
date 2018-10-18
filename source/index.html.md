@@ -3,11 +3,11 @@ title: API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
   - shell
+  - curl
   - python
   - javascript
 
 toc_footers:
-  - <p>We can put whatever we want here in the footer.</p>
 
 includes:
   - errors
@@ -34,6 +34,65 @@ A tool for resampling and resizing videos.
 Name | Type | Description | Required
 ---- | ---- | ----------- | --------
 video | Video | The input video. | true
+
+
+```javascript
+  {
+  "info": {
+    "version": "0.1.0",
+    "name": "video-formatter",
+    "description": "A tool for resampling and resizing videos"
+  },
+  "inputs": [
+    {
+      "name": "video",
+      "type": "types.Video",
+      "description": "The input video",
+      "required": true
+    }
+  ],
+  "parameters": [
+    {
+      "name": "fps",
+      "type": "types.Number",
+      "description": "The output frame rate",
+      "required": false
+    },
+    {
+      "name": "size",
+      "type": "types.Array",
+      "description": "A desired output (width, height) of the video. Dimensions can be -1, in which case the input aspect ratio is preserved",
+      "required": false
+    },
+    {
+      "name": "scale",
+      "type": "types.Number",
+      "description": "A numeric scale factor to apply to the input resolution",
+      "required": false
+    },
+    {
+      "name": "max-fps",
+      "type": "types.Number",
+      "description": "The maximum frame rate allowed for the output video",
+      "required": false
+    },
+    {
+      "name": "max-size",
+      "type": "types.Array",
+      "description": "A maximum (width, height) allowed for the video. Dimensions can be -1, in which case no constraint is applied to them",
+      "required": false
+    }
+  ],
+  "outputs": [
+    {
+      "name": "formatted-video",
+      "type": "types.VideoFile",
+      "description": "The formatted video file",
+      "filename": "formatted-video.mp4"
+    }
+  ]
+}
+```
 
 ### Parameters
 
@@ -130,6 +189,32 @@ chips | Directory | A directory containing the image chips for the best matches 
 ## Vehicle Detector
 
 A tool for detecting vehicles in videos.
+
+```python
+from voxel51.api import API
+from voxel51.jobs import JobRequest
+
+# Create an API session
+api = API()
+
+# Upload data
+data = api.upload_data("road.mp4")
+data_id = data["data_id"]
+
+# Upload job request
+job_request = JobRequest("vehicle-detector")
+job_request.set_input("video", data_id=data_id)
+job = api.upload_job_request(job_request, "detect-vehicles")
+job_id = job["job_id"]
+
+# Run job
+api.start_job(job_id)
+
+# Wait until job completes, and then download the output
+api.wait_until_job_completes(job_id)
+api.download_job_output(job_id, "output.zip")
+
+```
 
 ### Inputs 
 
