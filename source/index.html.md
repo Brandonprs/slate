@@ -3,13 +3,11 @@ title: API Reference
 
 language_tabs: # must be one of https://git.io/vQNgJ
   - shell
-  - ruby
   - python
   - javascript
 
 toc_footers:
-  - <a href='#'>Sign Up for a Developer Key</a>
-  - <a href='https://github.com/lord/slate'>Documentation Powered by Slate</a>
+  - <p>We can put whatever we want here in the footer.</p>
 
 includes:
   - errors
@@ -19,221 +17,167 @@ search: true
 
 # Introduction
 
-Welcome to the Kittn API! You can use our API to access Kittn API endpoints, which can get information on various cats, kittens, and breeds in our database.
+Welcome to the Analytics API! You can use this API to get an understanding for what our different analytics can do. 
 
-We have language bindings in Shell, Ruby, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
+We have language bindings in Shell, Python, and JavaScript! You can view code examples in the dark area to the right, and you can switch the programming language of the examples with the tabs in the top right.
 
 This example API documentation page was created with [Slate](https://github.com/lord/slate). Feel free to edit it and use it as a base for your own API's documentation.
 
-# Authentication
+# Analytics
 
-> To authorize, use this code:
+## Video Formatter
 
-```ruby
-require 'kittn'
+A tool for resampling and resizing videos.
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-```
+### Inputs
 
-```python
-import kittn
+Name | Type | Description | Required
+---- | ---- | ----------- | --------
+video | Video | The input video. | true
 
-api = kittn.authorize('meowmeowmeow')
-```
+### Parameters
 
-```shell
-# With shell, you can just pass the correct header with each request
-curl "api_endpoint_here"
-  -H "Authorization: meowmeowmeow"
-```
+Parameter | Type | Description | Required
+--------- | ---- | ----------- | --------
+fps | Number | The output frame rate. | false
+size | Array | A desired output (width, height) of the video. Dimensions can be -1, in which case the input aspect ratio is preserved. | false
+scale | Number | A numeric scale factor to apply to the input resolution. | false
+max-fps | Number | The maximum frame rate allowed for the output video. | false
+max-size | Array | A maximum (width, height) allowed for the video. Dimensions can be -1, in which case no constraint is applied to them. | false
 
-```javascript
-const kittn = require('kittn');
+## Object Detector
 
-let api = kittn.authorize('meowmeowmeow');
-```
+### Inputs
 
-> Make sure to replace `meowmeowmeow` with your API key.
+Name | Type | Description | Required
+---- | ---- | ----------- | --------
+video | Video | The input video to process. | true
 
-Kittn uses API keys to allow access to the API. You can register a new Kittn API key at our [developer portal](http://example.com/developers).
+### Parameters
 
-Kittn expects for the API key to be included in all API requests to the server in a header that looks like the following:
+Parameter | Type | Description | Required
+--------- | ---- | ----------- | --------
+fps | Number | An optional frame rate at which to process the video. | false
+size | Array | An optional [width, height] to use when processing the video frames. Dimensions can be -1, in which case the input aspect ratio is preserved. | false
+scale | Number | An optional numeric scale factor to apply to the input resolution when processing the video frames. | false
+frames | String | An optional string like '1-5,10,15-20' specifying specific video frames to process. | false
+objects | ObjectArray | An array of objects describing the 'labels' and confidence 'threshold' of objects to detect. | true
 
-`Authorization: meowmeowmeow`
+### Outputs
 
-<aside class="notice">
-You must replace <code>meowmeowmeow</code> with your personal API key.
-</aside>
+Name | Type | Description | Filename
+---- | ---- | ----------- | --------
+objects | DetectedObjectsSequenceDirectory | A directory of JSON files describing the detected objects. | 'objects/'
+chips | DualImageSequenceDirectory | A directory containing the image chips for the detected objects in the video. | 'chips/'
 
-# Kittens
 
-## Get All Kittens
+## Object Indexer
 
-```ruby
-require 'kittn'
+A tool for indexing detected objects in videos.
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get
-```
+### Inputs 
 
-```python
-import kittn
+Name | Type | Description | Required
+---- | ---- | ----------- | --------
+videos | ZippedVideoFileDirectory | A zipped director of videos to process. | true
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get()
-```
+### Parameters
 
-```shell
-curl "http://example.com/api/kittens"
-  -H "Authorization: meowmeowmeow"
-```
+Parameter | Type | Description | Required
+--------- | ---- | ----------- | --------
+fps | Number | An optional frame rate at which to process the video. | false
+size | Array | An optional [width, height] to use when processing the video frames. Dimensions can be -1, in which case the input aspect ratio is preserved. | false
+scale | Number | An optional numeric scale factor to apply to the input resolution when processing the video frames. | false
+frames | String | An optional string like '1-5,10,15-20' specifying specific video frames to process. | false
+objects | ObjectArray | An array of objects describing the 'labels' and confidence 'threshold' of objects to detect. | true
 
-```javascript
-const kittn = require('kittn');
+### Outputs
 
-let api = kittn.authorize('meowmeowmeow');
-let kittens = api.kittens.get();
-```
+Name | Type | Description | Filename
+---- | ---- | ----------- | --------
+objects | ZippedDetectedObjectsSequenceDirectory | A zip file containing directories of JSON files describing the detected objects in each video. | 'objects.zip'
+features | ZippedVideoObjectsFeaturesDirectory | A zip file containing directories of feature embeddings describing the detected objects in each video. | 'features.zip'
 
-> The above command returns JSON structured like this:
+## Object Matcher
 
-```json
-[
-  {
-    "id": 1,
-    "name": "Fluffums",
-    "breed": "calico",
-    "fluffiness": 6,
-    "cuteness": 7
-  },
-  {
-    "id": 2,
-    "name": "Max",
-    "breed": "unknown",
-    "fluffiness": 5,
-    "cuteness": 10
-  }
-]
-```
 
-This endpoint retrieves all kittens.
+A tool for finding best matches for a query image in an object corpus.
 
-### HTTP Request
+### Inputs 
 
-`GET http://example.com/api/kittens`
+Name | Type | Description | Required
+---- | ---- | ----------- | --------
+query | Image | The input query image to use. | true
+videos | ZippedVideoFileDirectory | A zipped directory containing the video corpus. | true
+objects | ZippedDetectedObjectsSequenceDirectory | A zip file containing directories of JSON files describing detected objects in each video. | false
+features | ZippedVideoObjectsFeaturesDirectory | A zip file containing directories of feature embeddings for the detected objects in each video | false
 
-### Query Parameters
+### Parameters
 
-Parameter | Default | Description
---------- | ------- | -----------
-include_cats | false | If set to true, the result will also include cats.
-available | true | If set to false, the result will include kittens that have already been adopted.
+Parameter | Type | Description | Required | Default
+--------- | ---- | ----------- | -------- | -------
+metric | String | The matching metric to use when computing similarity scores. | false | cosine
+top-k | Number | The number of best matches to return. | false | 5
 
-<aside class="success">
-Remember — a happy kitten is an authenticated kitten!
-</aside>
+### Outputs
 
-## Get a Specific Kitten
+Name | Type | Description | Filename
+---- | ---- | ----------- | --------
+matches | DetectedObjects | A JSON file describing the best matches for the input query | 'matches.json' 
+chips | Directory | A directory containing the image chips for the best matches | 'chips/'
 
-```ruby
-require 'kittn'
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.get(2)
-```
+## Vehicle Detector
 
-```python
-import kittn
+A tool for detecting vehicles in videos.
 
-api = kittn.authorize('meowmeowmeow')
-api.kittens.get(2)
-```
+### Inputs 
 
-```shell
-curl "http://example.com/api/kittens/2"
-  -H "Authorization: meowmeowmeow"
-```
+Name | Type | Description | Required
+---- | ---- | ----------- | --------
+video | Video | The input video to process. | true
 
-```javascript
-const kittn = require('kittn');
+### Parameters
 
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.get(2);
-```
+Parameter | Type | Description | Required
+--------- | ---- | ----------- | -------- 
+fps | Number | At optional frame rate at which to process the video. | false
+size | Array | An optional [width, height] to use when processing the video frames. Dimensions can be -1, in which case the input aspect ratio is preserved. | false
+scale | Number | An optional numeric scale factor to apply to the input resolution when processing the video frames. | false
+frames | String | An optional string like '1-5,10,15-20' specifying specific video frames to process. | false
+objects | ObjectArray | An array of objects describing the 'labels' and confidence 'threshold' of objects to detect. | true
 
-> The above command returns JSON structured like this:
+### Outputs
 
-```json
-{
-  "id": 2,
-  "name": "Max",
-  "breed": "unknown",
-  "fluffiness": 5,
-  "cuteness": 10
-}
-```
+Name | Type | Description | Filename
+---- | ---- | ----------- | --------
+vehicles | DetectedObjectsSequenceDirectory | A directory of JSON files describing the detected vehicles. | 'vehicles/' 
+chips | DualImageSequenceDirectory | A directory containing the image chips for the detected vehicles in the video. | 'chips/'
 
-This endpoint retrieves a specific kitten.
 
-<aside class="warning">Inside HTML code blocks like this one, you can't use Markdown, so use <code>&lt;code&gt;</code> blocks to denote code.</aside>
+## Vehicle Indexer
 
-### HTTP Request
+A tool for indexing detected vehicles in videos.
 
-`GET http://example.com/kittens/<ID>`
+### Inputs 
 
-### URL Parameters
+Name | Type | Description | Required
+---- | ---- | ----------- | --------
+videos | ZippedVideoFileDirectory | A zipped director of videos to process. | true
 
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to retrieve
+### Parameters
 
-## Delete a Specific Kitten
+Parameter | Type | Description | Required
+--------- | ---- | ----------- | -------- 
+fps | Number | At optional frame rate at which to process the video. | false
+size | Array | An optional [width, height] to use when processing the video frames. Dimensions can be -1, in which case the input aspect ratio is preserved. | false
+scale | Number | An optional numeric scale factor to apply to the input resolution when processing the video frames. | false
+frames | String | An optional string like '1-5,10,15-20' specifying specific video frames to process. | false
+objects | ObjectArray | An array of objects describing the 'labels' and confidence 'threshold' of objects to detect. | true
 
-```ruby
-require 'kittn'
+### Outputs
 
-api = Kittn::APIClient.authorize!('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```python
-import kittn
-
-api = kittn.authorize('meowmeowmeow')
-api.kittens.delete(2)
-```
-
-```shell
-curl "http://example.com/api/kittens/2"
-  -X DELETE
-  -H "Authorization: meowmeowmeow"
-```
-
-```javascript
-const kittn = require('kittn');
-
-let api = kittn.authorize('meowmeowmeow');
-let max = api.kittens.delete(2);
-```
-
-> The above command returns JSON structured like this:
-
-```json
-{
-  "id": 2,
-  "deleted" : ":("
-}
-```
-
-This endpoint deletes a specific kitten.
-
-### HTTP Request
-
-`DELETE http://example.com/kittens/<ID>`
-
-### URL Parameters
-
-Parameter | Description
---------- | -----------
-ID | The ID of the kitten to delete
-
+Name | Type | Description | Filename
+---- | ---- | ----------- | --------
+objects | ZippedDetectedObjectsSequenceDirectory | A zip file containing directories of JSON files describing detected objects in each video. | 'objects.zip'
+features | ZippedVideoObjectsFeaturesDirectory | A zip file containing directories of feature embeddings for the detected objects in each video | 'features.zip'
